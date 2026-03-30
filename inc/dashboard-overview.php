@@ -28,7 +28,16 @@ function content_audit_overview() { ?>
 	?>
 
     <h2><?php _e( 'Content Audit Overview', 'content-audit' ); ?></h2>
-	<p><a class="button secondary" href="<?php echo add_query_arg( array( 'format' => 'csv' ), home_url() ); ?>"><?php esc_html_e('Download as CSV', 'content-audit'); ?></a></p>
+	<?php
+	$csv_download_url = wp_nonce_url(
+		add_query_arg( array(
+			'format' => 'csv',
+		), home_url() ),
+		'download_csv',
+		'content_audit_csv_nonce'
+	);
+	?>
+	<p><a class="button secondary" href="<?php echo esc_url( $csv_download_url ); ?>"><?php esc_html_e('Download as CSV', 'content-audit'); ?></a></p>
 	<?php
 	// for each term in the audit taxonomy, print a box with a big number for the count
 	$terms = get_terms( 'content_audit', array( 'hide_empty' => 0 ) );
@@ -131,11 +140,14 @@ function get_content_audit_meta_values( $key = '', $types = 'page', $status = 'p
 
 add_filter( 'template_include', 'content_audit_download_template_include' );
 function content_audit_download_template_include( $template ) {
-	if ( !isset( $_REQUEST['format'] ) || 'csv' !== $_REQUEST['format'] )
-		return $template;
-	
-	global $wpdb;
+	$format = isset( $_REQUEST['format'] ) ? sanitize_text_field( $_REQUEST['format'] ) : '';
+	$can_download = current_user_can( 'manage_options' );
+	$nonce_check = isset( $_REQUEST['content_audit_csv_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST[ 'content_audit_csv_nonce' ] ) ), 'download_csv' );
 
+	if ( ! ( $format === 'csv' && $can_download && $nonce_check ) ) {
+		 return $template;
+	}
+	
 	$tableheaders = array( 
 		__( 'Post ID', 'content-audit' ), 
 		__( 'Title', 'content-audit' ), 
