@@ -61,6 +61,10 @@ If you would like to send me a translation, please write to me through <a href="
 
 == Changelog ==
 
+= 2.0.0.1-beta =
+
+* Prevent downloading of Content Audit CSV without `manage_options` capability and verified nonce
+
 = 2.0 =
 * Admin bar shows checkmarks for applied audit terms
 * Marking as audited from admin bar clears all other terms
